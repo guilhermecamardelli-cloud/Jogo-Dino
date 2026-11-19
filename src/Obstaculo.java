@@ -41,7 +41,7 @@ public class Obstaculo extends ObjetoDoJogo {
 
     @Override
     public void atualizar() {
-        x -= velocidade;   // anda para a esquerda
+        setX(getX() - velocidade);   // anda para a esquerda
         contador++;
     }
 
@@ -52,10 +52,10 @@ public class Obstaculo extends ObjetoDoJogo {
         }
         // troca de quadro a cada 10 atualizações (o cacto tem só 1, então não muda)
         BufferedImage atual = quadros.get((contador / 10) % quadros.size());
-        g.drawImage(atual, x, y, -largura, altura, null);
+        g.drawImage(atual, getX() + getLargura(), getY(), -getLargura(), getAltura(), null);   // largura negativa espelha a imagem; por isso começa em x + largura
     }
 
     public boolean saiuDaTela() {
-        return x + largura < 0;
+        return getX() + getLargura() < 0;
     }
 }

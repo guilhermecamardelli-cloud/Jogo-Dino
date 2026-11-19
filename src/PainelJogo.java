@@ -17,18 +17,8 @@ import javax.swing.JPanel;
  *   - Obstaculo(x, y, largura, altura, velocidade, boolean passaro), saiuDaTela()
  *   - Medidas iguais às da TelaGame: tela 800x400, chão em y = 300
  *
- * O CHÃO AINDA NÃO ESTÁ PRONTO. Os lugares dele estão marcados assim:
- *
- *     // >>> CHAO
- *     // chao.setVelocidade(velocidade);
- *     // <<< CHAO
- *
- * Quando a classe Chao ficar pronta, procure (Ctrl+F) por ">>> CHAO" e tire
- * o "// " do começo das linhas entre >>> e <<<, nos 3 blocos. Depois apague
- * as 2 linhas da "linha provisória do chão" no paintComponent.
- * A classe Chao precisa ter:
- *   - public Chao(int x, int y, int largura, int altura, int velocidade)
- *   - public void setVelocidade(int velocidade)
+ * O Chao fica no começo da lista de objetos (desenhado atrás de tudo) e recebe
+ * setVelocidade() sempre que o jogo acelera.
  */
 public class PainelJogo extends JPanel implements Runnable, KeyListener {
 
@@ -44,19 +34,23 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
     private static final int CACTO_GRANDE_L = 34, CACTO_GRANDE_A = 51;
     private static final int PASSARO_L = 60, PASSARO_A = 42;
 
+    private static final int PONTOS_PASSARO = 400;
+    // dia e noite se alternam a cada 1650 pontos; 6600 = 4 x 1650, então o meteoro cai no fim de uma noite
+    private static final int PONTOS_TROCA_DIA_NOITE = 1650;
+    // 1 ponto = 10 mil anos: 6600 pontos = 66 milhões de anos, quando caiu o meteoro de verdade
+    private static final int PONTOS_METEORO = 6600;
     private static final int FPS = 60;
     private static final int VELOCIDADE_INICIAL = 6;
     private static final int VELOCIDADE_MAXIMA = 14;
 
-    private enum Estado { JOGANDO, GAME_OVER }
+    private enum Estado { JOGANDO, METEORO, EXTINTO, GAME_OVER }
 
     // ---------- Atributos ----------
 
     private Jogador jogador;
 
-    // >>> CHAO
-    // private Chao chao;
-    // <<< CHAO
+    private Chao chao;
+    private Meteoro meteoro;
 
     private ArrayList<Obstaculo> obstaculos;     // só os obstáculos, para a colisão
     private int framesAteProximo;
@@ -106,6 +100,10 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
 
     /** Um passo do jogo. É synchronized porque o desenho roda em outra thread. */
     public synchronized void atualizar() {
+        if (estado == Estado.METEORO || estado == Estado.EXTINTO) {
+            atualizarMeteoro();
+            return;
+        }
         if (estado != Estado.JOGANDO) {
             return;
         }
@@ -133,18 +131,42 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
 
         verificarColisoes();
 
-        // Pontuação: 10 pontos por segundo; a cada 100 pontos, mais rápido
+        // Pontuação: 20 pontos por segundo; a cada 200 pontos, mais rápido
         contadorFrames++;
-        if (contadorFrames % 6 == 0) {
+        if (contadorFrames % 2 == 0) {
             pontuacao++;
         }
-        int novaVelocidade = Math.min(VELOCIDADE_INICIAL + pontuacao / 100, VELOCIDADE_MAXIMA);
+        if (pontuacao >= PONTOS_METEORO) {
+            chamarMeteoro();
+            return;
+        }
+        int novaVelocidade = Math.min(VELOCIDADE_INICIAL + pontuacao / 300, VELOCIDADE_MAXIMA);
         if (novaVelocidade != velocidade) {
             velocidade = novaVelocidade;
 
-            // >>> CHAO
-            // chao.setVelocidade(velocidade);
-            // <<< CHAO
+            chao.setVelocidade(velocidade);
+        }
+    }
+
+    // =================================================================
+    //  METEORO (6600 pontos = 66 milhões de anos)
+    // =================================================================
+
+    /** O jogo para e um meteoro cai do alto, em direção ao dinossauro. */
+    private void chamarMeteoro() {
+        int alvoX = jogador.getX() + jogador.getLargura() / 2;
+        int alvoY = CHAO_Y - 10;
+        meteoro = new Meteoro(alvoX + 450, -60, alvoX, alvoY);
+        objetos.add(meteoro);
+        estado = Estado.METEORO;
+    }
+
+    /** O meteoro cai; quando bate, o dinossauro vira esqueleto. */
+    private void atualizarMeteoro() {
+        meteoro.atualizar();
+        if (meteoro.bateu() && !jogador.isEsqueleto()) {
+            jogador.virarEsqueleto();
+            estado = Estado.EXTINTO;
         }
     }
 
@@ -155,7 +177,9 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
     /** Sorteia um cacto ou um pássaro e agenda o próximo. */
     public void gerarObstaculo() {
         Obstaculo novo;
-        if (pontuacao >= 200 && sorteio.nextInt(4) == 0) {   // pássaro depois de 200 pontos
+        // pássaro depois de 400 pontos: 1 chance em 2 (2 em 3 no modo noturno)
+        boolean sorteouPassaro = modoNoturno() ? sorteio.nextInt(3) != 0 : sorteio.nextBoolean();
+        if (pontuacao >= PONTOS_PASSARO && sorteouPassaro) {
             // Baixo: a base fica 5 px acima do chão, tem que pular.
             // Alto: a base fica 35 px acima do chão; o dino em pé (50 de altura) bate,
             //       mas abaixado (25 de altura) passa por baixo.
@@ -174,6 +198,14 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
         // rápido, maior o espaço, para sempre dar tempo de pousar e pular de novo
         int distancia = 350 + velocidade * 25 + sorteio.nextInt(300);
         framesAteProximo = distancia / velocidade;
+    }
+
+    /** Alterna dia e noite (cores invertidas) a cada 1650 pontos; o meteoro sempre cai de noite. */
+    private boolean modoNoturno() {
+        if (estado == Estado.METEORO || estado == Estado.EXTINTO) {
+            return true;
+        }
+        return (pontuacao / PONTOS_TROCA_DIA_NOITE) % 2 == 1;
     }
 
     public void verificarColisoes() {
@@ -196,10 +228,8 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
         velocidade = VELOCIDADE_INICIAL;
         objetos = new ArrayList<>();
 
-        // >>> CHAO
-        // chao = new Chao(0, CHAO_Y, LARGURA, ALTURA - CHAO_Y, velocidade);
-        // objetos.add(chao);       // primeiro o chão, para ficar atrás de tudo
-        // <<< CHAO
+        chao = new Chao(0, CHAO_Y, LARGURA, ALTURA - CHAO_Y, velocidade);
+        objetos.add(chao);       // primeiro o chão, para ficar atrás de tudo
 
         // x, y (topo do dino quando está no chão), largura, altura
         jogador = new Jogador(JOGADOR_X, CHAO_Y - JOGADOR_TAMANHO, JOGADOR_TAMANHO, JOGADOR_TAMANHO);
@@ -208,6 +238,7 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
         obstaculos = new ArrayList<>();
         framesAteProximo = 60;   // 1 segundo até o primeiro
 
+        meteoro = null;
         estado = Estado.JOGANDO;
     }
 
@@ -219,10 +250,6 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);     // limpa o fundo
         synchronized (this) {
-            // Linha provisória do chão: APAGUE estas 2 linhas quando ativar o CHAO
-            g.setColor(Color.GRAY);
-            g.drawLine(0, CHAO_Y, LARGURA, CHAO_Y);
-
             // Polimorfismo: o painel não sabe se é chão, jogador ou obstáculo
             for (ObjetoDoJogo objeto : objetos) {
                 objeto.desenhar(g);
@@ -237,6 +264,21 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
                 g.drawString("GAME OVER", LARGURA / 2 - 75, ALTURA / 2 - 20);
                 g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
                 g.drawString("Aperte ENTER para jogar de novo", LARGURA / 2 - 145, ALTURA / 2 + 10);
+            }
+
+            if (estado == Estado.EXTINTO && meteoro.explosaoTerminou()) {
+                g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 28));
+                g.drawString("DINO EXTINTO", LARGURA / 2 - 90, ALTURA / 2 - 80);
+                g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
+                g.drawString("Aperte ENTER para jogar de novo", LARGURA / 2 - 145, ALTURA / 2 - 55);
+            }
+
+            if (modoNoturno()) {
+                // inverte todas as cores já desenhadas: fundo preto, desenhos claros
+                g.setXORMode(Color.WHITE);
+                g.setColor(Color.BLACK);
+                g.fillRect(0, 0, getWidth(), getHeight());
+                g.setPaintMode();
             }
         }
     }
@@ -261,7 +303,9 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
                 default:
                     break;                      // Enter e teclas não previstas: ignora
             }
-        } else if (tecla == KeyEvent.VK_ENTER) {   // GAME_OVER: só o Enter vale
+        } else if (estado == Estado.METEORO) {
+            // meteoro caindo: nenhuma tecla vale
+        } else if (tecla == KeyEvent.VK_ENTER) {   // GAME_OVER ou EXTINTO: só o Enter vale
             reiniciar();
         }
     }
