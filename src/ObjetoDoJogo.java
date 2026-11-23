@@ -1,6 +1,8 @@
+import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
 
+/** Classe mãe de tudo o que aparece no jogo. Guarda posição e tamanho e define o que todos sabem fazer. */
 public abstract class ObjetoDoJogo {
     // Encapsulamento: atributos privados, acessados só por métodos
     private int x;
@@ -18,6 +20,7 @@ public abstract class ObjetoDoJogo {
         this.altura = altura;
     }
 
+    // Cada filha faz do seu jeito (polimorfismo)
     public abstract void atualizar();
 
     public abstract void desenhar(Graphics g);
@@ -38,7 +41,7 @@ public abstract class ObjetoDoJogo {
         return altura;
     }
 
-    // Só as filhas mudam a posição
+    // protected: só as filhas mudam a posição
     protected void setX(int x) {
         this.x = x;
     }
@@ -47,11 +50,30 @@ public abstract class ObjetoDoJogo {
         this.y = y;
     }
 
+    // A caixa usada na colisão; a filha pode sobrescrever
     public Rectangle getHitbox() {
         return new Rectangle(x, y, largura, altura);
     }
 
     public boolean colideCom(ObjetoDoJogo outro) {
         return getHitbox().intersects(outro.getHitbox());
+    }
+
+    /** Devolve a cor de cada letra do desenho. Quem usa pixel art sobrescreve; '.' (null) é vazio. */
+    protected Color corDoPixel(char letra) {
+        return null;
+    }
+
+    /** Desenha um texto por linha, um quadradinho por letra, usando corDoPixel() para escolher a cor. */
+    protected void desenharPixels(Graphics g, String[] desenho, int x, int y, int escala) {
+        for (int linha = 0; linha < desenho.length; linha++) {
+            for (int coluna = 0; coluna < desenho[linha].length(); coluna++) {
+                Color cor = corDoPixel(desenho[linha].charAt(coluna));
+                if (cor != null) {
+                    g.setColor(cor);
+                    g.fillRect(x + coluna * escala, y + linha * escala, escala, escala);
+                }
+            }
+        }
     }
 }

@@ -1,11 +1,7 @@
 import java.awt.Color;
 import java.awt.Graphics;
 
-/**
- * O chão: uma linha com pequenos traços que deslizam para a esquerda,
- * dando a sensação de velocidade. O PainelJogo cria o Chao e chama
- * setVelocidade() sempre que o jogo acelera.
- */
+/** O chão: uma linha com traços que deslizam para a esquerda e dão a sensação de velocidade. */
 public class Chao extends ObjetoDoJogo {
 
     private static final int PERIODO = 60;   // de quanto em quanto o desenho se repete
@@ -16,7 +12,6 @@ public class Chao extends ObjetoDoJogo {
     public Chao(int x, int y, int largura, int altura, int velocidade) {
         super(x, y, largura, altura);
         this.velocidade = velocidade;
-        this.deslocamento = 0;
     }
 
     public void setVelocidade(int velocidade) {
