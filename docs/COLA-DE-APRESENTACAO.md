@@ -68,7 +68,7 @@ Fluxo em 4 passos: **teclado → Controle → Modelo muda → Visão desenha**.
 - Depois dele o dinossauro vira esqueleto e o jogo continua; aos 8800 vira avestruz e aos 11000 vira barril.
 
 **Geração de obstáculos (dentro do `Jogo`)**
-- `gerarObstaculo()` sorteia cacto pequeno, cacto grande ou pássaro (pássaros só depois de 600 pontos). Depois de 1000 pontos, 1 em cada 4 cactos sai duplo (maior).
+- `gerarObstaculo()` sorteia cacto pequeno, cacto grande ou pássaro (pássaros só depois de 600 pontos). Cada cacto sai simples ou duplo, por sorteio (1 chance em 3 de ser duplo).
 - `criarPassaro()` sorteia a altura: baixo bate em pé; alto passa por cima.
 
 **Pergunta provável:** *"Por que o jogo continua depois do meteoro?"* → É o modo infinito: só termina quando bate num obstáculo.
@@ -120,7 +120,7 @@ Fluxo em 4 passos: **teclado → Controle → Modelo muda → Visão desenha**.
 
 - Tela 800 x 400 · 60 quadros por segundo · 11 classes · 3 pacotes
 - 45 pontos por segundo · 1 ponto = 10 mil anos
-- Pássaros: 600 pontos · cacto duplo: 1000 · dia/noite: 1650 · meteoro: 6600 · avestruz: 8800 · barril: 11000
+- Pássaros: 600 pontos · dia/noite: 1650 · meteoro: 6600 · avestruz: 8800 · barril: 11000
 - Velocidade de 5 a 11 (sobe 1 a cada 400 pontos)
 
 ## Se der problema na hora

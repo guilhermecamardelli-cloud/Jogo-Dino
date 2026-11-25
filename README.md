@@ -15,7 +15,7 @@ Jogo estilo "dinossauro do Chrome" (corredor sem fim) em Java com Swing e AWT, f
 ## Regras
 
 - 45 pontos por segundo (o barril chega em cerca de 4 minutos); a velocidade sobe 1 a cada 400 pontos (de 5 até 11).
-- Cactos desde o início (a partir de 1000 pontos, às vezes surge o cacto duplo, maior); pássaros verdes a partir de 600 pontos, com altura e velocidade sorteadas e, às vezes, em bando de 2. Os mais altos o dinossauro passa por baixo; os mais baixos é preciso pular.
+- Cactos desde o início (sorteados entre cacto simples e cacto duplo); pássaros verdes a partir de 600 pontos, com altura e velocidade sorteadas e, às vezes, em bando de 2. Os mais altos o dinossauro passa por baixo; os mais baixos é preciso pular.
 - Dia e noite se alternam a cada 1650 pontos: de dia aparece o sol, de noite a lua (as cores se invertem). Nuvens passam o tempo todo.
 - A pontuação é simbólica: 1 ponto = 10 mil anos (a tela mostra os milhões de anos).
 - Aos 6600 pontos (66 milhões de anos) cai um meteoro e o dinossauro vira esqueleto, mas continua correndo.

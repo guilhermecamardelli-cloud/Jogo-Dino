@@ -27,7 +27,6 @@ public class Jogo {
 
     // 1 ponto = 10 mil anos, então 6600 pontos = 66 milhões de anos (quando caiu o meteoro de verdade)
     private static final int PONTOS_PASSARO = 600;              // os pássaros começam a aparecer
-    private static final int PONTOS_CACTO_DUPLO = 1000;         // o cacto duplo começa a aparecer
     private static final int PONTOS_TROCA_DIA_NOITE = 1650;     // dia e noite se alternam
     private static final int PONTOS_METEORO = 6600;             // vira esqueleto (o jogo continua)
     private static final int PONTOS_AVESTRUZ = 8800;            // 88 milhões de anos: vira avestruz
@@ -285,8 +284,8 @@ public class Jogo {
             boolean grande = sorteio.nextBoolean();          // cacto grande ou pequeno
             int largura = grande ? CACTO_GRANDE_L : CACTO_PEQUENO_L;
             int altura = grande ? CACTO_GRANDE_A : CACTO_PEQUENO_A;
-            // depois de 1000 pontos: 1 chance em 4 de vir o cacto duplo, maior que os outros
-            if (pontuacao >= PONTOS_CACTO_DUPLO && sorteio.nextInt(4) == 0) {
+            // sorteio: 1 chance em 3 de vir o cacto duplo (desde o início), senão cacto simples
+            if (sorteio.nextInt(3) == 0) {
                 adicionar(new Obstaculo(LARGURA, CHAO_Y - CACTO_DUPLO_A, CACTO_DUPLO_L, CACTO_DUPLO_A, velocidade, "/Cacto_duplo.png"));
             } else {
                 adicionar(new Obstaculo(LARGURA, CHAO_Y - altura, largura, altura, velocidade, false));
