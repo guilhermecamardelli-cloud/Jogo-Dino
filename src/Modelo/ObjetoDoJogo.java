@@ -1,3 +1,4 @@
+package Modelo;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Rectangle;
@@ -10,6 +11,7 @@ public abstract class ObjetoDoJogo {
     private int largura;
     private int altura;
 
+    // Construtor valida o tamanho: objeto sem largura/altura não faz sentido
     public ObjetoDoJogo(int x, int y, int largura, int altura) {
         if (largura <= 0 || altura <= 0) {
             throw new IllegalArgumentException("Largura e altura devem ser maiores que zero.");
@@ -55,6 +57,7 @@ public abstract class ObjetoDoJogo {
         return new Rectangle(x, y, largura, altura);
     }
 
+    // Colisão: as duas caixas (hitbox) se cruzam?
     public boolean colideCom(ObjetoDoJogo outro) {
         return getHitbox().intersects(outro.getHitbox());
     }

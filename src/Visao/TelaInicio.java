@@ -1,3 +1,8 @@
+package Visao;
+
+import Modelo.Jogador;
+import Modelo.Jogo;
+import Modelo.Obstaculo;
 import java.awt.*;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
@@ -26,15 +31,16 @@ public class TelaInicio extends JPanel {
     private final Jogador dino = new Jogador(110, 250, 50, 50);
     private final Obstaculo cacto = new Obstaculo(620, 261, 26, 39, 0, false);
 
-    public TelaInicio(JFrame janela) {
-        setPreferredSize(new Dimension(PainelJogo.LARGURA, PainelJogo.ALTURA));
+    /** O Controle entrega o que fazer quando apertar START GAME (aoIniciar). */
+    public TelaInicio(JFrame janela, Runnable aoIniciar) {
+        setPreferredSize(new Dimension(Jogo.LARGURA, Jogo.ALTURA));
         setBackground(FUNDO_TV);
         setLayout(null);    // sem layout: cada botão vai na posição que a gente escolher
 
         JButton start = criarBotao("START GAME", 200);
         JButton sair = criarBotao("SAIR", 245);
 
-        start.addActionListener(e -> Main.abrirJogo(janela));
+        start.addActionListener(e -> aoIniciar.run());
         sair.addActionListener(e -> System.exit(0));
 
         janela.getRootPane().setDefaultButton(start);   // ENTER também aperta o START GAME
@@ -67,6 +73,7 @@ public class TelaInicio extends JPanel {
         return botao;
     }
 
+    // Desenha a tela de abertura (dino, cacto e título)
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);            // pinta o fundo escuro (o "gabinete" da TV)
@@ -128,6 +135,7 @@ public class TelaInicio extends JPanel {
         g2.drawString(texto, x, y);
     }
 
+    // Calcula a largura do texto para centralizar na tela
     private void escreverCentralizado(Graphics2D g2, String texto, int y, int tamanho) {
         g2.setFont(new Font(Font.MONOSPACED, Font.BOLD, tamanho));
         int largura = g2.getFontMetrics().stringWidth(texto);

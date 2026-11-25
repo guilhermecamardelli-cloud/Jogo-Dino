@@ -1,3 +1,4 @@
+package Modelo;
 import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
@@ -9,6 +10,7 @@ public class Obstaculo extends ObjetoDoJogo {
     private final int velocidade;
     private int contador;
 
+    // passaro = true usa as 2 imagens de asa; false usa o cacto
     public Obstaculo(int x, int y, int largura, int altura, int velocidade, boolean passaro) {
         super(x, y, largura, altura);
         this.velocidade = velocidade;
@@ -28,6 +30,7 @@ public class Obstaculo extends ObjetoDoJogo {
         }
     }
 
+    // Cada passo: anda para a esquerda e conta quadros para a animação
     @Override
     public void atualizar() {
         setX(getX() - velocidade);   // anda para a esquerda
@@ -44,6 +47,7 @@ public class Obstaculo extends ObjetoDoJogo {
         }
     }
 
+    // True quando já passou da borda esquerda: o Jogo pode remover
     public boolean saiuDaTela() {
         return getX() + getLargura() < 0;
     }

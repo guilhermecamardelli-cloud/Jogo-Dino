@@ -1,21 +1,15 @@
-import java.awt.Color;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+package Modelo;
+
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Random;
-import javax.swing.JPanel;
 
 /**
- * O "cérebro" do jogo: roda o loop, cria os objetos, trata o teclado, a colisão,
- * a pontuação, o dia e a noite e a evolução do personagem.
- * Guarda tudo numa lista de ObjetoDoJogo e manda cada um se atualizar e se desenhar (polimorfismo).
+ * O modelo do jogo: guarda os objetos, a pontuação, a velocidade e o estado, e aplica as regras
+ * (colisão, dia e noite, meteoro, evolução). Não sabe nada de janela, tela ou teclado.
  */
-public class PainelJogo extends JPanel implements Runnable, KeyListener {
+public class Jogo {
 
     // ---------- Constantes ----------
     public static final int LARGURA = 800;
@@ -37,12 +31,12 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
     private static final int PONTOS_AVESTRUZ = 8800;            // 88 milhões de anos: vira avestruz
     private static final int PONTOS_BARRIL = 11000;             // 110 milhões de anos: vira barril
     private static final int FRAMES_MENSAGEM = 150;
-    private static final int FPS = 60;
+    public static final int FPS = 60;
     private static final int VELOCIDADE_INICIAL = 5;
     private static final int VELOCIDADE_MAXIMA = 11;
     private static final int PONTOS_POR_NIVEL = 400;   // a cada 400 pontos o jogo fica 1 mais rápido
 
-    private enum Estado { JOGANDO, METEORO, GAME_OVER }
+    public enum Estado { JOGANDO, METEORO, GAME_OVER }
 
     // ---------- Atributos ----------
 
@@ -65,45 +59,62 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
     private int contadorFrames;
     private Estado estado;
     private final Random sorteio = new Random();
-    private Thread threadDoJogo;
 
-    public PainelJogo() {
-        setPreferredSize(new Dimension(LARGURA, ALTURA));
-        setBackground(Color.WHITE);
-        setFocusable(true);          // sem isso o painel não recebe as teclas
-        addKeyListener(this);
+    // Começa chamando reiniciar(): o mesmo código monta o jogo novo e o recomeço
+    public Jogo() {
         reiniciar();
     }
 
-    /** Começa o loop. A Main chama depois do janela.setVisible(true). */
-    public void iniciar() {
-        if (threadDoJogo == null) {
-            threadDoJogo = new Thread(this);
-            threadDoJogo.setDaemon(true);
-            threadDoJogo.start();
-            requestFocusInWindow();
+    // =================================================================
+    //  AÇÕES (o Controle chama a partir do teclado)
+    // =================================================================
+
+    /** Só pula enquanto o jogo está rodando; o Jogador ignora se já estiver no ar. */
+    public void pular() {
+        if (estado == Estado.JOGANDO) {
+            jogador.pular();
+        }
+    }
+
+    /** Abaixa ao apertar a seta (só jogando); levantar ao soltar vale sempre. */
+    public void abaixar(boolean ativo) {
+        if (!ativo || estado == Estado.JOGANDO) {
+            jogador.abaixar(ativo);
         }
     }
 
     // =================================================================
-    //  LOOP
+    //  LEITURA (a Visão só lê estes dados para desenhar)
     // =================================================================
 
-    @Override
-    public void run() {
-        while (true) {
-            atualizar();
-            repaint();
-            try {
-                Thread.sleep(1000 / FPS);
-            } catch (InterruptedException e) {
-                return;
-            }
-        }
+    public List<ObjetoDoJogo> getObjetos() {
+        return objetos;
     }
 
-    /** Um passo do jogo. É synchronized porque o desenho roda em outra thread. */
-    public synchronized void atualizar() {
+    public int getPontuacao() {
+        return pontuacao;
+    }
+
+    public Estado getEstado() {
+        return estado;
+    }
+
+    /** O aviso do meio da tela, ou null quando não há nenhum para mostrar. */
+    public String getMensagem() {
+        return framesMensagem > 0 ? mensagem : null;
+    }
+
+    /** Alterna dia e noite (cores invertidas) a cada 1650 pontos; o meteoro e a explosão são sempre de noite. */
+    public boolean isNoite() {
+        return modoNoturno();
+    }
+
+    // =================================================================
+    //  LOOP: um passo do jogo
+    // =================================================================
+
+    /** Um passo do jogo: o JogoController chama 60 vezes por segundo. */
+    public void atualizar() {
         if (estado == Estado.METEORO) {
             atualizarMeteoro();
             return;
@@ -213,6 +224,7 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
         }
     }
 
+    // Mostra uma mensagem na tela por alguns instantes
     private void avisar(String texto) {
         mensagem = texto;
         framesMensagem = FRAMES_MENSAGEM;
@@ -303,6 +315,7 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
         return (pontuacao / PONTOS_TROCA_DIA_NOITE) % 2 == 1;
     }
 
+    // Tocou em qualquer obstáculo? Fim de jogo
     private void verificarColisoes() {
         for (Obstaculo o : obstaculos) {
             if (jogador.colideCom(o)) {
@@ -317,7 +330,7 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
     // =================================================================
 
     /** Volta tudo para o começo. */
-    public synchronized void reiniciar() {
+    public void reiniciar() {
         pontuacao = 0;
         contadorFrames = 0;
         velocidade = VELOCIDADE_INICIAL;
@@ -346,87 +359,5 @@ public class PainelJogo extends JPanel implements Runnable, KeyListener {
         mensagem = null;
         framesMensagem = 0;
         estado = Estado.JOGANDO;
-    }
-
-    // =================================================================
-    //  DESENHO
-    // =================================================================
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);     // limpa o fundo
-        synchronized (this) {
-            // Polimorfismo: o painel não sabe se é chão, jogador ou obstáculo
-            for (ObjetoDoJogo objeto : objetos) {
-                objeto.desenhar(g);
-            }
-
-            g.setColor(Color.DARK_GRAY);
-            g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 18));
-            g.drawString(String.format("%05d", pontuacao), LARGURA - 80, 30);
-            // 1 ponto = 10 mil anos, então 100 pontos = 1 milhão de anos
-            g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
-            g.drawString(String.format("%.1f", pontuacao / 100.0).replace('.', ',') + " mi anos", LARGURA - 112, 48);
-
-            if (estado == Estado.GAME_OVER) {
-                g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 28));
-                g.drawString("GAME OVER", LARGURA / 2 - 75, ALTURA / 2 - 20);
-                g.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 16));
-                g.drawString("Aperte ENTER para jogar de novo", LARGURA / 2 - 145, ALTURA / 2 + 10);
-            }
-
-            if (framesMensagem > 0 && mensagem != null) {
-                g.setFont(new Font(Font.MONOSPACED, Font.BOLD, 24));
-                FontMetrics medidas = g.getFontMetrics();
-                g.drawString(mensagem, (LARGURA - medidas.stringWidth(mensagem)) / 2, ALTURA / 2 - 80);
-            }
-
-            if (modoNoturno()) {
-                // inverte todas as cores já desenhadas: fundo preto, desenhos claros
-                g.setXORMode(Color.WHITE);
-                g.setColor(Color.BLACK);
-                g.fillRect(0, 0, getWidth(), getHeight());
-                g.setPaintMode();
-            }
-        }
-    }
-
-    // =================================================================
-    //  TECLADO
-    // =================================================================
-
-    @Override
-    public synchronized void keyPressed(KeyEvent e) {
-        int tecla = e.getKeyCode();
-
-        if (estado == Estado.JOGANDO) {
-            switch (tecla) {
-                case KeyEvent.VK_SPACE:
-                case KeyEvent.VK_UP:
-                    jogador.pular();         // o Jogador ignora se estiver no ar
-                    break;
-                case KeyEvent.VK_DOWN:
-                    jogador.abaixar(true);
-                    break;
-                default:
-                    break;                      // Enter e teclas não previstas: ignora
-            }
-        } else if (estado == Estado.METEORO) {
-            // meteoro caindo: nenhuma tecla vale
-        } else if (tecla == KeyEvent.VK_ENTER) {   // GAME_OVER: só o Enter vale
-            reiniciar();
-        }
-    }
-
-    @Override
-    public synchronized void keyReleased(KeyEvent e) {
-        if (e.getKeyCode() == KeyEvent.VK_DOWN) {
-            jogador.abaixar(false);
-        }
-    }
-
-    @Override
-    public void keyTyped(KeyEvent e) {
-        // não usado
     }
 }

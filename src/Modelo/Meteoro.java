@@ -1,3 +1,4 @@
+package Modelo;
 import java.awt.Color;
 import java.awt.Graphics;
 
@@ -36,6 +37,7 @@ public class Meteoro extends ObjetoDoJogo {
         this.velocidadeY = (alvoY - yInicial) / (double) PASSOS_ATE_O_IMPACTO;
     }
 
+    // 3 fases: cai, a explosão cresce, a explosão some
     @Override
     public void atualizar() {
         if (passosRestantes > 0) {                          // 1) caindo
@@ -54,6 +56,7 @@ public class Meteoro extends ObjetoDoJogo {
         }
     }
 
+    // Antes de bater: bola de fogo com rastro. Depois: explosão
     @Override
     public void desenhar(Graphics g) {
         if (!bateu()) {

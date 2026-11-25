@@ -1,3 +1,4 @@
+package Modelo;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.Random;
@@ -142,7 +143,7 @@ public class Ceu extends ObjetoDoJogo {
         this.posX = x;
     }
 
-    /** O PainelJogo avisa quando vira noite: a nuvem troca de cor e o sol vira lua. */
+    /** O Jogo avisa quando vira noite: a nuvem troca de cor e o sol vira lua. */
     public void setNoite(boolean noite) {
         this.noite = noite;
     }
@@ -154,6 +155,7 @@ public class Ceu extends ObjetoDoJogo {
         setY((int) (140 - 100 * Math.sin(Math.PI * progresso)));
     }
 
+    // Sol/lua só anima; nuvem anda devagar para a esquerda
     @Override
     public void atualizar() {
         if (astro) {
@@ -164,6 +166,7 @@ public class Ceu extends ObjetoDoJogo {
         }
     }
 
+    // Mesma classe, dois usos: astro (sol/lua) ou nuvem
     @Override
     public void desenhar(Graphics g) {
         if (astro) {
@@ -173,6 +176,7 @@ public class Ceu extends ObjetoDoJogo {
         }
     }
 
+    // Cada letra do desenho vira uma cor (muda de noite)
     @Override
     protected Color corDoPixel(char letra) {
         switch (letra) {

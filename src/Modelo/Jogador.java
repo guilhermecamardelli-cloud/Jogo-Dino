@@ -1,3 +1,4 @@
+package Modelo;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
@@ -28,6 +29,7 @@ public class Jogador extends ObjetoDoJogo {
     private int passos;                                    // conta os quadros, para animar as pernas
     private int piscando;
 
+    // chaoY guarda a altura do chão: é onde o pulo termina
     public Jogador(int x, int y, int largura, int altura) {
         super(x, y, largura, altura);
         this.chaoY = y;
@@ -35,6 +37,7 @@ public class Jogador extends ObjetoDoJogo {
 
     // ---------- Movimento ----------
 
+    // Pulo: dá um impulso para cima; a gravidade em atualizar() faz cair
     public void pular() {
         if (noChao) {                                      // no ar, ignora
             velocidadeY = FORCA_PULO;
@@ -48,6 +51,7 @@ public class Jogador extends ObjetoDoJogo {
         abaixado = ativo && noChao;
     }
 
+    // Cada passo: aplica a gravidade enquanto estiver no ar
     @Override
     public void atualizar() {
         passos++;
@@ -65,7 +69,7 @@ public class Jogador extends ObjetoDoJogo {
         }
     }
 
-    /** Troca a forma (o PainelJogo chama nos anos certos) e faz o personagem piscar. */
+    /** Troca a forma (o Jogo chama nos anos certos) e faz o personagem piscar. */
     public void evoluirPara(Forma nova) {
         forma = nova;
         abaixado = false;
@@ -158,6 +162,7 @@ public class Jogador extends ObjetoDoJogo {
 
     // ---------- Colisão ----------
 
+    // Sobrescreve a mãe (polimorfismo): a caixa muda se abaixado ou virando barril
     @Override
     public Rectangle getHitbox() {
         if (abaixado) {

@@ -1,3 +1,4 @@
+package Modelo;
 import java.awt.Color;
 import java.awt.Graphics;
 
@@ -18,11 +19,13 @@ public class Chao extends ObjetoDoJogo {
         this.velocidade = velocidade;
     }
 
+    // Faz os traços andarem; o resto (%) faz o desenho repetir sem fim
     @Override
     public void atualizar() {
         deslocamento = (deslocamento + velocidade) % PERIODO;
     }
 
+    // Linha reta + traços deslocados
     @Override
     public void desenhar(Graphics g) {
         g.setColor(Color.GRAY);
