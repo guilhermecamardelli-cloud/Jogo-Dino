@@ -3,7 +3,7 @@ import java.awt.Graphics;
 import java.awt.image.BufferedImage;
 import javax.imageio.ImageIO;
 
-/** Cacto ou pássaro que vem da direita. Usa imagens PNG; o pássaro tem 2 quadros (bate as asas). */
+/** Cacto (simples ou duplo) ou pássaro que vem da direita. Usa imagens PNG; o pássaro tem 2 quadros (bate as asas). */
 public class Obstaculo extends ObjetoDoJogo {
 
     private final BufferedImage[] quadros;
@@ -19,6 +19,13 @@ public class Obstaculo extends ObjetoDoJogo {
         } else {
             quadros = new BufferedImage[] { ler("/Cacto.png") };
         }
+    }
+
+    // Outro obstáculo de uma imagem só (usado pelo cacto duplo): passa o caminho do PNG
+    public Obstaculo(int x, int y, int largura, int altura, int velocidade, String imagem) {
+        super(x, y, largura, altura);
+        this.velocidade = velocidade;
+        quadros = new BufferedImage[] { ler(imagem) };
     }
 
     private BufferedImage ler(String caminho) {

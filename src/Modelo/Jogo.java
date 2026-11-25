@@ -21,11 +21,13 @@ public class Jogo {
     private static final int JOGADOR_TAMANHO = 50;  // 50x50; abaixado vira 60x25
     private static final int CACTO_PEQUENO_L = 26, CACTO_PEQUENO_A = 39;
     private static final int CACTO_GRANDE_L = 34, CACTO_GRANDE_A = 51;
+    private static final int CACTO_DUPLO_L = 74, CACTO_DUPLO_A = 84;    // dois cactos juntos (Cacto_duplo.png)
     private static final int PASSARO_L = 60, PASSARO_A = 42;
     private static final int PASSARO_ALTURA_MIN = 5, PASSARO_ALTURA_MAX = 115;   // base do pássaro acima do chão
 
     // 1 ponto = 10 mil anos, então 6600 pontos = 66 milhões de anos (quando caiu o meteoro de verdade)
     private static final int PONTOS_PASSARO = 600;              // os pássaros começam a aparecer
+    private static final int PONTOS_CACTO_DUPLO = 1000;         // o cacto duplo começa a aparecer
     private static final int PONTOS_TROCA_DIA_NOITE = 1650;     // dia e noite se alternam
     private static final int PONTOS_METEORO = 6600;             // vira esqueleto (o jogo continua)
     private static final int PONTOS_AVESTRUZ = 8800;            // 88 milhões de anos: vira avestruz
@@ -266,7 +268,7 @@ public class Jogo {
     //  OBSTÁCULOS E COLISÃO
     // =================================================================
 
-    /** Sorteia um cacto ou um pássaro (às vezes um bando) e agenda o próximo. */
+    /** Sorteia um cacto (pequeno, grande ou duplo) ou um pássaro (às vezes um bando) e agenda o próximo. */
     private void gerarObstaculo() {
         int extra = 0;                       // espaço a mais depois de um bando
         // pássaro depois de 600 pontos: 1 chance em 3 (1 em 2 no modo noturno)
@@ -283,7 +285,12 @@ public class Jogo {
             boolean grande = sorteio.nextBoolean();          // cacto grande ou pequeno
             int largura = grande ? CACTO_GRANDE_L : CACTO_PEQUENO_L;
             int altura = grande ? CACTO_GRANDE_A : CACTO_PEQUENO_A;
-            adicionar(new Obstaculo(LARGURA, CHAO_Y - altura, largura, altura, velocidade, false));
+            // depois de 1000 pontos: 1 chance em 4 de vir o cacto duplo, maior que os outros
+            if (pontuacao >= PONTOS_CACTO_DUPLO && sorteio.nextInt(4) == 0) {
+                adicionar(new Obstaculo(LARGURA, CHAO_Y - CACTO_DUPLO_A, CACTO_DUPLO_L, CACTO_DUPLO_A, velocidade, "/Cacto_duplo.png"));
+            } else {
+                adicionar(new Obstaculo(LARGURA, CHAO_Y - altura, largura, altura, velocidade, false));
+            }
         }
 
         // Distância até o próximo: um pulo dura uns 38 frames, então quanto mais
